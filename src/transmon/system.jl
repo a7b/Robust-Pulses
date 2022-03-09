@@ -8,7 +8,7 @@ include(joinpath(WDIR, "src", "rbqoc.jl"))
 using Dates
 using HDF5
 using LinearAlgebra
-#test
+
 # paths
 const TRANSMON_OUT_PATH = abspath(joinpath(WDIR, "out", "transmon"))
 
