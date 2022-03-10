@@ -284,7 +284,7 @@ function run_traj(;evolution_time=16., solver_type=altro,
     constraints = ConstraintList(n, m, N)
     add_constraint!(constraints, control_bnd, 2:N-2)
     add_constraint!(constraints, control_bnd_boundary, N-1:N-1)
-    add_constraint!(constraints, control_bnd_boundary, N:N)
+    #add_constraint!(constraints, control_bnd_boundary, N:N)
     add_constraint!(constraints, target_astate_constraint, N:N)
     for norm_constraint in norm_constraints
         add_constraint!(constraints, norm_constraint, 2:N-1)
