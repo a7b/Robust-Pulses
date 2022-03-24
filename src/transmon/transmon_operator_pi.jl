@@ -3,6 +3,7 @@ include(joinpath(WDIR, "src", "transmon", "system.jl"))
 
 using Altro
 using HDF5
+#using Colors
 using LinearAlgebra
 using RobotDynamics
 using StaticArrays
@@ -13,27 +14,36 @@ using LaTeXStrings
 
 # paths
 const EXPERIMENT_META = "transmon"
-const EXPERIMENT_NAME = "transmon_pi_eg_low_amp"
+const EXPERIMENT_NAME = "transmon_operator_pi"
 const SAVE_PATH = abspath(joinpath(WDIR, "out", EXPERIMENT_META, EXPERIMENT_NAME))
 
 # problem
-const A_MAX = 2π * 4e-3
+const A_MAX = 2π * 6e-3
 const CONTROL_COUNT = 2
-const STATE_COUNT = 2
+const STATE_COUNT = 4
 const ASTATE_SIZE_BASE = STATE_COUNT * HDIM_ISO + 2 * CONTROL_COUNT
-const SAMPLE_COUNT = 2
+const SAMPLE_COUNT = 4
 const ASTATE_SIZE = ASTATE_SIZE_BASE
 const ACONTROL_SIZE = CONTROL_COUNT
 # const SAMPLE_COUNT = 4
 # state indices
 const STATE1_IDX = SVector{HDIM_ISO}(1:HDIM_ISO)
 const STATE2_IDX = SVector{HDIM_ISO}(STATE1_IDX[end] + 1:STATE1_IDX[end] + HDIM_ISO)
-const CONTROLS_IDX = STATE2_IDX[end] + 1:STATE2_IDX[end] + CONTROL_COUNT
+const STATE3_IDX = SVector{HDIM_ISO}(STATE2_IDX[end] + 1:STATE2_IDX[end] + HDIM_ISO)
+const STATE4_IDX = SVector{HDIM_ISO}(STATE3_IDX[end] + 1:STATE3_IDX[end] + HDIM_ISO)
+
+const CONTROLS_IDX = STATE4_IDX[end] + 1:STATE4_IDX[end] + CONTROL_COUNT
 const DCONTROLS_IDX = CONTROLS_IDX[end] + 1:CONTROLS_IDX[end] + CONTROL_COUNT
 const DSTATE1_IDX = SVector{HDIM_ISO}(DCONTROLS_IDX[end] + 1:DCONTROLS_IDX[end] + HDIM_ISO)
 const DSTATE2_IDX = SVector{HDIM_ISO}(DSTATE1_IDX[end] + 1:DSTATE1_IDX[end] + HDIM_ISO)
+const DSTATE3_IDX = SVector{HDIM_ISO}(DSTATE2_IDX[end] + 1:DSTATE2_IDX[end] + HDIM_ISO)
+const DSTATE4_IDX = SVector{HDIM_ISO}(DSTATE3_IDX[end] + 1:DSTATE3_IDX[end] + HDIM_ISO)
+
 const D2STATE1_IDX = SVector{HDIM_ISO}(DSTATE2_IDX[end] + 1:DSTATE2_IDX[end] + HDIM_ISO)
 const D2STATE2_IDX = SVector{HDIM_ISO}(D2STATE1_IDX[end] + 1:D2STATE1_IDX[end] + HDIM_ISO)
+const D2STATE3_IDX = SVector{HDIM_ISO}(D2STATE2_IDX[end] + 1:D2STATE2_IDX[end] + HDIM_ISO)
+const D2STATE4_IDX = SVector{HDIM_ISO}(D2STATE3_IDX[end] + 1:D2STATE3_IDX[end] + HDIM_ISO)
+
 # const STATE3_IDX = DCONTROLS_IDX[end] + 1:DCONTROLS_IDX[end] + HDIM_ISO
 # const STATE4_IDX = STATE3_IDX[end] + 1:STATE3_IDX[end] + HDIM_ISO
 # const DSTATE1_IDX = STATE4_IDX[end] + 1:STATE4_IDX[end] + HDIM_ISO
@@ -70,22 +80,37 @@ function RD.discrete_dynamics(::Type{RK3}, model::Model{DO}, astate::SVector,
     h_prop = exp(negi_h * dt)
     state1_ = astate[STATE1_IDX]
     state2_ = astate[STATE2_IDX]
+    state3_ = astate[STATE3_IDX]
+    state4_ = astate[STATE4_IDX]
+
     state1 =  h_prop * state1_
     state2 = h_prop * state2_
+    state3 =  h_prop * state3_
+    state4 = h_prop * state4_
+
     controls = astate[CONTROLS_IDX] + astate[DCONTROLS_IDX] .* dt
     dcontrols = astate[DCONTROLS_IDX] + acontrol[D2CONTROLS_IDX] .* dt
 
     astate_ = [
-        state1; state2; controls; dcontrols;
+        state1; state2; state3; state4; controls; dcontrols;
     ]
 
     if DO >= 1
         dstate1_ = astate[DSTATE1_IDX]
         dstate1 = h_prop * (dstate1_ + dt *  NEGI_TRANSMON_NUMBER_ISO * state1_)
         append!(astate_, dstate1)
+
         dstate2_ = astate[DSTATE2_IDX]
         dstate2 = h_prop * (dstate2_ + dt *  NEGI_TRANSMON_NUMBER_ISO * state2_)
         append!(astate_, dstate2)
+
+        dstate3_ = astate[DSTATE3_IDX]
+        dstate3 = h_prop * (dstate3_ + dt *  NEGI_TRANSMON_NUMBER_ISO * state3_)
+        append!(astate_, dstate3)
+
+        dstate4_ = astate[DSTATE4_IDX]
+        dstate4 = h_prop * (dstate4_ + dt *  NEGI_TRANSMON_NUMBER_ISO * state4_)
+        append!(astate_, dstate4)
         # state3_ = astate[STATE3_IDX]
         # state3 = h_prop * state3_
         # state4_ = astate[STATE4_IDX]
@@ -104,9 +129,18 @@ function RD.discrete_dynamics(::Type{RK3}, model::Model{DO}, astate::SVector,
         d2state1_ = astate[D2STATE1_IDX]
         d2state1 = h_prop * (d2state1_ + dt * NEGI2_H0_ISO * dstate1_)
         append!(astate_, d2state1)
+
         d2state2_ = astate[D2STATE2_IDX]
         d2state2 = h_prop * (d2state2_ + dt * NEGI2_H0_ISO * dstate2_)
         append!(astate_, d2state2)
+
+        d2state3_ = astate[D2STATE3_IDX]
+        d2state3 = h_prop * (d2state3_ + dt * NEGI2_H0_ISO * dstate3_)
+        append!(astate_, d2state3)
+
+        d2state4_ = astate[D2STATE4_IDX]
+        d2state4 = h_prop * (d2state4_ + dt * NEGI2_H0_ISO * dstate4_)
+        append!(astate_, d2state4)
         # d2state1_ = astate[D2STATE1_IDX]
         # d2state1 = h_prop * (d2state1_ + dt * NEGI2_H0_ISO * dstate1_)
         # d2state2_ = astate[D2STATE2_IDX]
@@ -130,22 +164,36 @@ function RD.discrete_dynamics(::Type{RK3}, model::Model{DO}, astate::AbstractVec
     h_prop = exp(negi_h * dt)
     state1_ = astate[STATE1_IDX]
     state2_ = astate[STATE2_IDX]
+    state3_ = astate[STATE3_IDX]
+    state4_ = astate[STATE4_IDX]
+
     state1 =  h_prop * state1_
     state2 = h_prop * state2_
+    state3 =  h_prop * state3_
+    state4 = h_prop * state4_
     controls = astate[CONTROLS_IDX] + astate[DCONTROLS_IDX] .* dt
     dcontrols = astate[DCONTROLS_IDX] + acontrol[D2CONTROLS_IDX] .* dt
 
     astate_ = [
-        state1; state2;  controls; dcontrols;
+        state1; state2; state3; state4;  controls; dcontrols;
     ]
 
     if DO >= 1
         dstate1_ = astate[DSTATE1_IDX]
         dstate1 = h_prop * (dstate1_ + dt *  NEGI_TRANSMON_NUMBER_ISO * state1_)
         append!(astate_, dstate1)
+
         dstate2_ = astate[DSTATE2_IDX]
         dstate2 = h_prop * (dstate2_ + dt *  NEGI_TRANSMON_NUMBER_ISO * state2_)
         append!(astate_, dstate2)
+
+        dstate3_ = astate[DSTATE3_IDX]
+        dstate3 = h_prop * (dstate3_ + dt *  NEGI_TRANSMON_NUMBER_ISO * state3_)
+        append!(astate_, dstate3)
+
+        dstate4_ = astate[DSTATE4_IDX]
+        dstate4 = h_prop * (dstate4_ + dt *  NEGI_TRANSMON_NUMBER_ISO * state4_)
+        append!(astate_, dstate4)
         # state3_ = astate[STATE3_IDX]
         # state3 = h_prop * state3_
         # state4_ = astate[STATE4_IDX]
@@ -164,20 +212,19 @@ function RD.discrete_dynamics(::Type{RK3}, model::Model{DO}, astate::AbstractVec
         d2state1_ = astate[D2STATE1_IDX]
         d2state1 = h_prop * (d2state1_ + dt * NEGI2_H0_ISO * dstate1_)
         append!(astate_, d2state1)
+
         d2state2_ = astate[D2STATE2_IDX]
         d2state2 = h_prop * (d2state2_ + dt * NEGI2_H0_ISO * dstate2_)
         append!(astate_, d2state2)
-        # d2state1_ = astate[D2STATE1_IDX]
-        # d2state1 = h_prop * (d2state1_ + dt * NEGI2_H0_ISO * dstate1_)
-        # d2state2_ = astate[D2STATE2_IDX]
-        # d2state2 = h_prop * (d2state2_ + dt * NEGI2_H0_ISO * dstate2_)
-        # d2state3_ = astate[D2STATE3_IDX]
-        # d2state3 = h_prop * (d2state3_ + dt * NEGI2_H0_ISO * dstate3_)
-        # d2state4_ = astate[D2STATE4_IDX]
-        # d2state4 = h_prop * (d2state4_ + dt * NEGI2_H0_ISO * dstate4_)
-        # append!(astate_, [d2state1; d2state2; d2state3; d2state4])
-    end
 
+        d2state3_ = astate[D2STATE3_IDX]
+        d2state3 = h_prop * (d2state3_ + dt * NEGI2_H0_ISO * dstate3_)
+        append!(astate_, d2state3)
+
+        d2state4_ = astate[D2STATE4_IDX]
+        d2state4 = h_prop * (d2state4_ + dt * NEGI2_H0_ISO * dstate4_)
+        append!(astate_, d2state4)
+    end
     return astate_
 end
 @inline discrete_dynamics!(x_::AbstractVector, ::Type{Q}, model::AbstractModel, x::AbstractVector,
@@ -186,7 +233,7 @@ end
 )
 
 # main
-function run_traj(;evolution_time=16., solver_type=altro,
+function run_traj(;evolution_time=40., solver_type=altro,
                   sqrtbp=false, derivative_order=0, integrator_type=rk3,
                   qs=[1e0, 1e0, 1e0, 1e-1, 5e-2, 1e-1],
                   smoke_test=false, dt_inv=Int64(5e0), constraint_tol=1e-9, al_tol=1e-5,
@@ -202,6 +249,8 @@ function run_traj(;evolution_time=16., solver_type=altro,
     x0_ = zeros(n)
     x0_[STATE1_IDX] = IS1_ISO
     x0_[STATE2_IDX] = IS2_ISO
+    x0_[STATE3_IDX] = IS3_ISO
+    x0_[STATE4_IDX] = IS4_ISO
     # x0_[STATE3_IDX] = IS3_ISO_
     # x0_[STATE4_IDX] = IS4_ISO_
     x0 = SVector{n}(x0_)
@@ -209,6 +258,8 @@ function run_traj(;evolution_time=16., solver_type=altro,
     xf_ = zeros(n)
     xf_[STATE1_IDX] =  XPI_G_ISO
     xf_[STATE2_IDX] = XPI_E_ISO
+    xf_[STATE3_IDX] = XPI_3_ISO
+    xf_[STATE4_IDX] = XPI_4_ISO
     #xf_[CONTROLS_IDX] = [0.,0.]
     # xf_[STATE4_IDX] = gate * IS4_ISO_
     xf = SVector{n}(xf_)
@@ -238,7 +289,7 @@ function run_traj(;evolution_time=16., solver_type=altro,
         ts[k + 1] = ts[k] + dt
     end
     U0 = [SVector{m}(
-        fill(1e-5, CONTROL_COUNT)
+        rand(-A_MAX:A_MAX, CONTROL_COUNT)
     ) for k = 1:N-1]
     X0 = [SVector{n}([
         fill(NaN, n);
@@ -251,12 +302,8 @@ function run_traj(;evolution_time=16., solver_type=altro,
         #fill(qs[2], 1); # ∫a
         fill(qs[2], CONTROL_COUNT); # a
         fill(qs[3], CONTROL_COUNT); # ∂a
-        # fill(0, eval(:($derivative_order >= 1 ? ($SAMPLE_COUNT - $STATE_COUNT)
-        #                * $HDIM_ISO : 0))) # ψ3, ψ4
-        #fill(qs[4], HDIM_ISO);
-        #fill(0, HDIM_ISO); # eval(:($derivative_order >= 1 ? $SAMPLE_COUNT * $HDIM_ISO : 0))); # ∂ψ
-        #fill(qs[5], HDIM_ISO);
-        #fill(0, HDIM_ISO); #eval(:($derivative_order >= 2 ? $SAMPLE_COUNT * $HDIM_ISO : 0))); # ∂2ψ
+        fill(qs[4], eval(:($derivative_order >= 1 ? $SAMPLE_COUNT * $HDIM_ISO : 0))); # ∂ψ
+        fill(qs[5], eval(:($derivative_order >= 2 ? $SAMPLE_COUNT * $HDIM_ISO : 0)));
     ]))
     Qf = Q * N
     R = Diagonal(SVector{m}([
@@ -272,7 +319,7 @@ function run_traj(;evolution_time=16., solver_type=altro,
     # must reach target state, must have zero net flux
     target_astate_constraint = GoalConstraint(xf, [STATE1_IDX; STATE2_IDX])
     # must obey unit norm
-    nidxs = [STATE1_IDX, STATE2_IDX]
+    nidxs = [STATE1_IDX, STATE2_IDX, STATE3_IDX, STATE4_IDX]
     # if derivative_order >= 1
     #     push!(nidxs, STATE3_IDX)
     #     push!(nidxs, STATE4_IDX)
@@ -448,6 +495,8 @@ function plot_population(save_file_path; title="", xlabel="Time (ns)", ylabel="P
     d = Int(hdim_iso/2)
     state1_idx = Array(1:hdim_iso)
     state2_idx = Array(1 + hdim_iso: hdim_iso + hdim_iso)
+    state3_idx = Array(1 + hdim_iso + hdim_iso: hdim_iso + hdim_iso + hdim_iso)
+    state4_idx = Array(1 + hdim_iso + hdim_iso + hdim_iso: hdim_iso + hdim_iso + hdim_iso + hdim_iso)
     # make labels
     transmon_labels = ["g", "e", "f", "h"][1:transmon_state_count]
 
@@ -456,16 +505,26 @@ function plot_population(save_file_path; title="", xlabel="Time (ns)", ylabel="P
     plot_file_path = generate_file_path("png", EXPERIMENT_NAME, SAVE_PATH)
     pops = zeros(N, d)
     pops2 = zeros(N, d)
+    pops3 = zeros(N, d)
+    pops4 = zeros(N, d)
     for k = 1:N
         ψ = get_vec_uniso(astates[k, state1_idx])
         ψ2 = get_vec_uniso(astates[k, state2_idx])
+        ψ3 = get_vec_uniso(astates[k, state3_idx])
+        ψ4 = get_vec_uniso(astates[k, state4_idx])
         pops[k, :] = map(x -> abs(x)^2, ψ)
         pops2[k, :] = map(x -> abs(x)^2, ψ2)
+        pops3[k, :] = map(x -> abs(x)^2, ψ3)
+        pops4[k, :] = map(x -> abs(x)^2, ψ4)
     end
+    styles = [:solid, :dash, :dot, :dashdot]
     for i = 1:d
         label = transmon_labels[i]
-        Plots.plot!(ts, pops[:, i], linestyle = :dash, linewidth = 1., label=label)
-        Plots.plot!(ts, pops2[:, i], linestyle = :dot, linewidth = 1.2, label = label)
+        style = styles[i]
+        Plots.plot!(ts, pops[:, i], linestyle = style, lc = "cornflowerblue"  , label=label)
+        Plots.plot!(ts, pops2[:, i], linestyle = style, lc = "darkorange", label = label)
+        Plots.plot!(ts, pops3[:, i], linestyle = style, lc = "darkseagreen", label = label)
+        Plots.plot!(ts, pops4[:, i], linestyle = style, lc = "violet", label = label)
     end
     Plots.savefig(fig, plot_file_path)
     return plot_file_path
@@ -497,6 +556,8 @@ function gen_dparam(save_file_path; trial_count=500, sigma_max=1e-4, save=true)
     x0 = zeros(n)
     x0[STATE1_IDX] = IS1_ISO
     x0[STATE2_IDX] = IS2_ISO
+    x0[STATE3_IDX] = IS3_ISO
+    x0[STATE4_IDX] = IS4_ISO
     X[1] = x0
     # target state
     # xf = zeros(n)
@@ -505,10 +566,15 @@ function gen_dparam(save_file_path; trial_count=500, sigma_max=1e-4, save=true)
     # xf[model.state1_idx] = get_vec_iso(ψT)
     # xf = V(xf)
     xf = zeros(n)
-    ψT = [0, -1im, 0]
-    ψT2 = [-1im, 0, 0]
+    ψT = get_vec_uniso(XPI_G_ISO)
+    ψT2 = get_vec_uniso(XPI_E_ISO)
+    ψT3 = get_vec_uniso(XPI_3_ISO)
+    ψT4 = get_vec_uniso(XPI_4_ISO)
     xf[STATE1_IDX] = XPI_G_ISO
     xf[STATE2_IDX] = XPI_E_ISO
+    xf[STATE3_IDX] = XPI_3_ISO
+    xf[STATE4_IDX] = XPI_4_ISO
+
     # generate parameters
     ωq_dev_max = 2π * 2e-3
     devs = Array(range(-ωq_dev_max, stop=ωq_dev_max, length=2 * trial_count + 1))
@@ -521,6 +587,8 @@ function gen_dparam(save_file_path; trial_count=500, sigma_max=1e-4, save=true)
     negi_h0s = map(negi_h0rot_iso, devs)
     gate_errors = zeros(2 * trial_count + 1)
     gate_errors2 = zeros(2 * trial_count + 1)
+    gate_errors3 = zeros(2 * trial_count + 1)
+    gate_errors4 = zeros(2* trial_count + 1)
     # collect gate errors
     for (i, negi_h0) in enumerate(negi_h0s)
         mh1 .= negi_h0
@@ -530,10 +598,17 @@ function gen_dparam(save_file_path; trial_count=500, sigma_max=1e-4, save=true)
         end
         ψN = get_vec_uniso(X[N][STATE1_IDX])
         ψn2 = get_vec_uniso(X[N][STATE2_IDX])
+        ψn3 = get_vec_uniso(X[N][STATE3_IDX])
+        ψn4 = get_vec_uniso(X[N][STATE4_IDX])
+
         gate_error = 1 - abs(ψT'ψN)^2
         gate_error2 = 1 - abs(ψT2'ψn2)^2
+        gate_error3 = 1 - abs(ψT3'ψn3)^2
+        gate_error4 = 1 - abs(ψT4'ψn4)^2
         gate_errors[i] = gate_error
         gate_errors2[i] = gate_error2
+        gate_errors3[i] = gate_error3
+        gate_errors4[i] = gate_error4
     end
     # save
     data_file_path = generate_file_path("h5", "dparams", SAVE_PATH)
@@ -542,6 +617,8 @@ function gen_dparam(save_file_path; trial_count=500, sigma_max=1e-4, save=true)
             write(data_file, "save_file_path", save_file_path)
             write(data_file, "gate_errors", gate_errors)
             write(data_file, "gate_errors2", gate_errors2)
+            write(data_file, "gate_errors3", gate_errors3)
+            write(data_file, "gate_errors4", gate_errors4)
             write(data_file, "devs", devs)
             write(data_file, "fracs", fracs)
         end
@@ -551,20 +628,28 @@ function gen_dparam(save_file_path; trial_count=500, sigma_max=1e-4, save=true)
 end
 
 
-function plot_dparam(data_file_paths; labels=["|g⟩" * " π/2", "|e⟩" * " π/2"], legend=:bottomright)
+function plot_dparam(data_file_paths; labels=["|g⟩", "|e⟩", "|g⟩ + i|e⟩", "|g⟩ - |e⟩"], legend=:bottomright)
     # grab
     gate_errors = []
     gate_errors2 = []
+    gate_errors3 = []
+    gate_errors4 = []
+
     fracs = []
     for data_file_path in data_file_paths
-        (gate_errors_, gate_errors2_, fracs_) = h5open(data_file_path, "r") do data_file
+        (gate_errors_, gate_errors2_, gate_errors3_, gate_errors4_, fracs_) = h5open(data_file_path, "r") do data_file
             gate_errors_ = read(data_file, "gate_errors")
             gate_errors2_ = read(data_file, "gate_errors2")
+            gate_errors3_ = read(data_file, "gate_errors3")
+            gate_errors4_ = read(data_file, "gate_errors4")
+
             fracs_ = read(data_file, "fracs")
-            return (gate_errors_, gate_errors2_, fracs_)
+            return (gate_errors_, gate_errors2_, gate_errors3_, gate_errors4_,  fracs_)
         end
         push!(gate_errors, gate_errors_)
         push!(gate_errors2, gate_errors2_)
+        push!(gate_errors3, gate_errors3_)
+        push!(gate_errors4, gate_errors4_)
         push!(fracs, fracs_)
     end
     # initial plot
@@ -576,10 +661,14 @@ function plot_dparam(data_file_paths; labels=["|g⟩" * " π/2", "|e⟩" * " π/
     Plots.ylabel!("Gate Error")
     gate_errors_ = gate_errors[1]
     gate_errors2_ = gate_errors2[1]
+    gate_errors3_ = gate_errors3[1]
+    gate_errors4_ = gate_errors4[1]
     fracs_ = fracs[1]
     trial_count = Int((length(fracs_) - 1)/2)
     gate_errors__ = zeros(trial_count + 1)
     gate_errors2__ = zeros(trial_count + 1)
+    gate_errors3__ = zeros(trial_count + 1)
+    gate_errors4__ = zeros(trial_count + 1)
     # average
     mid = trial_count + 1
     fracs__ = fracs_[mid:end]
@@ -591,10 +680,20 @@ function plot_dparam(data_file_paths; labels=["|g⟩" * " π/2", "|e⟩" * " π/
     for j = 1:trial_count
         gate_errors2__[j + 1] = (gate_errors2_[mid - j] + gate_errors2_[mid + j]) / 2
     end
+    gate_errors3__[1] = gate_errors3_[mid]
+    for j = 1:trial_count
+        gate_errors3__[j + 1] = (gate_errors3_[mid - j] + gate_errors3_[mid + j]) / 2
+    end
+    gate_errors4__[1] = gate_errors4_[mid]
+    for j = 1:trial_count
+        gate_errors4__[j + 1] = (gate_errors4_[mid - j] + gate_errors4_[mid + j]) / 2
+    end
     #log_ge = map(x -> log10(x), gate_errors__)
     #label = isnothing(labels) ? nothing : labels[i]
     Plots.plot!(fracs__.*(1e3/2π), gate_errors__, label=labels[1])
     Plots.plot!(fracs__.*(1e3/2π), gate_errors2__, label=labels[2])
+    Plots.plot!(fracs__.*(1e3/2π), gate_errors3__, label=labels[3])
+    Plots.plot!(fracs__.*(1e3/2π), gate_errors4__, label=labels[4])
     plot_file_path = generate_file_path("png", "gate_error_plot", SAVE_PATH)
     Plots.savefig(fig, plot_file_path)
     return plot_file_path

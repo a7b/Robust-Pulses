@@ -69,6 +69,8 @@ Rz(θ) = [ℯ^(-1im * θ/2) 0;
 const ID = Array{Float64,2}(I(HDIM))
 const IS1_ISO = get_vec_iso(ID[:,1])
 const IS2_ISO = get_vec_iso(ID[:,2])
+const IS3_ISO = get_vec_iso([1/sqrt(2), 1im/sqrt(2), 0])
+const IS4_ISO = get_vec_iso([1/sqrt(2), -1/sqrt(2), 0])
 # target states
 const XPIBY2_subspace = hcat([1/sqrt(2); -1im/sqrt(2); zeros(TRANSMON_STATE_COUNT - 2)],
                     [-1im/sqrt(2); 1/sqrt(2); zeros(TRANSMON_STATE_COUNT -2)])
@@ -76,6 +78,8 @@ const XPIBY2_ISO = get_vec_iso(XPIBY2_subspace[:,1])
 const XPIBY2_ISO2 = get_vec_iso(XPIBY2_subspace[:,2])
 const XPI_G_ISO = get_vec_iso([0, -1im, 0])
 const XPI_E_ISO = get_vec_iso([-1im, 0, 0])
+const XPI_3_ISO = get_vec_iso(push!(Rx(π)*[1/sqrt(2), 1im/sqrt(2)], 0))
+const XPI_4_ISO = get_vec_iso(push!(Rx(π)*[1/sqrt(2), -1/sqrt(2)], 0))
 # paths
 const SPIN_OUT_PATH = abspath(joinpath(WDIR, "out", "spin"))
 const FBFQ_DFQ_DATA_FILE_PATH = joinpath(SPIN_OUT_PATH, "figures", "misc", "dfq.h5")

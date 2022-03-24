@@ -523,7 +523,7 @@ function gen_dparam(save_file_path; trial_count=500, sigma_max=1e-4, save=true)
         ψN = get_vec_uniso(X[N][STATE1_IDX])
         ψn2 = get_vec_uniso(X[N][STATE2_IDX])
         gate_error = 1 - abs(ψT'ψN)^2
-        gate_error2 = 1 - abs(ψT2'ψn2)
+        gate_error2 = 1 - abs(ψT2'ψn2)^2
         gate_errors[i] = gate_error
         gate_errors2[i] = gate_error2
     end
