@@ -17,11 +17,11 @@ using LaTeXStrings
 
 # paths
 const EXPERIMENT_META = "transmon"
-const EXPERIMENT_NAME = "transmon_operator_pi"
+const EXPERIMENT_NAME = "transmon_operator_pi_hyp"
 const SAVE_PATH = abspath(joinpath(WDIR, "out", EXPERIMENT_META, EXPERIMENT_NAME))
 
 # problem
-const A_MAX = 2π * 6e-3
+const A_MAX = 2π * 35e-3
 const CONTROL_COUNT = 2
 const STATE_COUNT = 4
 const ASTATE_SIZE_BASE = STATE_COUNT * HDIM_ISO + 2 * CONTROL_COUNT
@@ -739,10 +739,10 @@ def make_dict(toterror, deriv, controls, fp):
 function objective(params::Tuple{Float64, Float64})
     deriv = params[1]
     controls = params[2]
-    toterror, fp = (10 + deriv + controls, "hi")
+    toterror, fp = run_traj(evolution_time = 60., sqrtbp = true, derivative_order = 1, qs = [1e0, controls, 1e0, deriv, 5e-2, 1e-1])
     return py"make_dict"(toterror, deriv, controls, fp)
 end
 
 best = ho.fmin(fn = objective, space = space, algo = tpe_alg, trials = tpe_trials, max_evals = 22)
-print(best)
-print(tpe_trials.results)
+print("best" = best)
+println(tpe_trials.results)

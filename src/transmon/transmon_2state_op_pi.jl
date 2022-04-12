@@ -18,11 +18,11 @@ const EXPERIMENT_NAME = "transmon_operator_pi"
 const SAVE_PATH = abspath(joinpath(WDIR, "out", EXPERIMENT_META, EXPERIMENT_NAME))
 
 # problem
-const A_MAX = 2π * 6e-3
+const A_MAX = 2π * 35e-3
 const CONTROL_COUNT = 2
 const STATE_COUNT = 4
 const ASTATE_SIZE_BASE = STATE_COUNT * HDIM_ISO + 2 * CONTROL_COUNT
-const SAMPLE_COUNT = 1
+const SAMPLE_COUNT = 2
 const ASTATE_SIZE = ASTATE_SIZE_BASE
 const ACONTROL_SIZE = CONTROL_COUNT
 # const SAMPLE_COUNT = 4
@@ -36,12 +36,12 @@ const CONTROLS_IDX = STATE4_IDX[end] + 1:STATE4_IDX[end] + CONTROL_COUNT
 const DCONTROLS_IDX = CONTROLS_IDX[end] + 1:CONTROLS_IDX[end] + CONTROL_COUNT
 const DSTATE1_IDX = SVector{HDIM_ISO}(DCONTROLS_IDX[end] + 1:DCONTROLS_IDX[end] + HDIM_ISO)
 #const DSTATE2_IDX = SVector{HDIM_ISO}(DSTATE1_IDX[end] + 1:DSTATE1_IDX[end] + HDIM_ISO)
-# const DSTATE3_IDX = SVector{HDIM_ISO}(DSTATE2_IDX[end] + 1:DSTATE2_IDX[end] + HDIM_ISO)
+const DSTATE3_IDX = SVector{HDIM_ISO}(DSTATE1_IDX[end] + 1:DSTATE1_IDX[end] + HDIM_ISO)
 # const DSTATE4_IDX = SVector{HDIM_ISO}(DSTATE3_IDX[end] + 1:DSTATE3_IDX[end] + HDIM_ISO)
 
-const D2STATE1_IDX = SVector{HDIM_ISO}(DSTATE1_IDX[end] + 1:DSTATE1_IDX[end] + HDIM_ISO)
-# const D2STATE2_IDX = SVector{HDIM_ISO}(D2STATE1_IDX[end] + 1:D2STATE1_IDX[end] + HDIM_ISO)
-# const D2STATE3_IDX = SVector{HDIM_ISO}(D2STATE2_IDX[end] + 1:D2STATE2_IDX[end] + HDIM_ISO)
+const D2STATE1_IDX = SVector{HDIM_ISO}(DSTATE3_IDX[end] + 1:DSTATE3_IDX[end] + HDIM_ISO)
+#const D2STATE2_IDX = SVector{HDIM_ISO}(D2STATE1_IDX[end] + 1:D2STATE1_IDX[end] + HDIM_ISO)
+const D2STATE3_IDX = SVector{HDIM_ISO}(D2STATE1_IDX[end] + 1:D2STATE1_IDX[end] + HDIM_ISO)
 # const D2STATE4_IDX = SVector{HDIM_ISO}(D2STATE3_IDX[end] + 1:D2STATE3_IDX[end] + HDIM_ISO)
 
 # const STATE3_IDX = DCONTROLS_IDX[end] + 1:DCONTROLS_IDX[end] + HDIM_ISO
@@ -104,9 +104,9 @@ function RD.discrete_dynamics(::Type{RK3}, model::Model{DO}, astate::SVector,
         # dstate2 = h_prop * (dstate2_ + dt *  NEGI_TRANSMON_NUMBER_ISO * state2_)
         # append!(astate_, dstate2)
         #
-        # dstate3_ = astate[DSTATE3_IDX]
-        # dstate3 = h_prop * (dstate3_ + dt *  NEGI_TRANSMON_NUMBER_ISO * state3_)
-        # append!(astate_, dstate3)
+        dstate3_ = astate[DSTATE3_IDX]
+        dstate3 = h_prop * (dstate3_ + dt *  NEGI_TRANSMON_NUMBER_ISO * state3_)
+        append!(astate_, dstate3)
         #
         # dstate4_ = astate[DSTATE4_IDX]
         # dstate4 = h_prop * (dstate4_ + dt *  NEGI_TRANSMON_NUMBER_ISO * state4_)
@@ -134,9 +134,9 @@ function RD.discrete_dynamics(::Type{RK3}, model::Model{DO}, astate::SVector,
         # d2state2 = h_prop * (d2state2_ + dt * NEGI2_H0_ISO * dstate2_)
         # append!(astate_, d2state2)
         #
-        # d2state3_ = astate[D2STATE3_IDX]
-        # d2state3 = h_prop * (d2state3_ + dt * NEGI2_H0_ISO * dstate3_)
-        # append!(astate_, d2state3)
+        d2state3_ = astate[D2STATE3_IDX]
+        d2state3 = h_prop * (d2state3_ + dt * NEGI2_H0_ISO * dstate3_)
+        append!(astate_, d2state3)
         #
         # d2state4_ = astate[D2STATE4_IDX]
         # d2state4 = h_prop * (d2state4_ + dt * NEGI2_H0_ISO * dstate4_)
@@ -187,9 +187,9 @@ function RD.discrete_dynamics(::Type{RK3}, model::Model{DO}, astate::AbstractVec
         # dstate2 = h_prop * (dstate2_ + dt *  NEGI_TRANSMON_NUMBER_ISO * state2_)
         # append!(astate_, dstate2)
         #
-        # dstate3_ = astate[DSTATE3_IDX]
-        # dstate3 = h_prop * (dstate3_ + dt *  NEGI_TRANSMON_NUMBER_ISO * state3_)
-        # append!(astate_, dstate3)
+        dstate3_ = astate[DSTATE3_IDX]
+        dstate3 = h_prop * (dstate3_ + dt *  NEGI_TRANSMON_NUMBER_ISO * state3_)
+        append!(astate_, dstate3)
         #
         # dstate4_ = astate[DSTATE4_IDX]
         # dstate4 = h_prop * (dstate4_ + dt *  NEGI_TRANSMON_NUMBER_ISO * state4_)
@@ -217,9 +217,9 @@ function RD.discrete_dynamics(::Type{RK3}, model::Model{DO}, astate::AbstractVec
         # d2state2 = h_prop * (d2state2_ + dt * NEGI2_H0_ISO * dstate2_)
         # append!(astate_, d2state2)
         #
-        # d2state3_ = astate[D2STATE3_IDX]
-        # d2state3 = h_prop * (d2state3_ + dt * NEGI2_H0_ISO * dstate3_)
-        # append!(astate_, d2state3)
+        d2state3_ = astate[D2STATE3_IDX]
+        d2state3 = h_prop * (d2state3_ + dt * NEGI2_H0_ISO * dstate3_)
+        append!(astate_, d2state3)
         #
         # d2state4_ = astate[D2STATE4_IDX]
         # d2state4 = h_prop * (d2state4_ + dt * NEGI2_H0_ISO * dstate4_)
