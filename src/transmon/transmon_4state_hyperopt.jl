@@ -631,11 +631,6 @@ function gen_dparam(save_file_path; trial_count=500, sigma_max=1e-4, save=true)
 end
 
 function return_cost(data_file_path)
-    gate_errors = []
-    gate_errors2 = []
-    gate_errors3 = []
-    gate_errors4 = []
-
     fracs = []
     (gate_errors_, gate_errors2_, gate_errors3_, gate_errors4_) = h5open(data_file_path, "r") do data_file
         gate_errors_ = read(data_file, "gate_errors")
@@ -646,12 +641,10 @@ function return_cost(data_file_path)
         fracs_ = read(data_file, "fracs")
         return (gate_errors_, gate_errors2_, gate_errors3_, gate_errors4_)
     end
-    push!(gate_errors, gate_errors_)
-    push!(gate_errors2, gate_errors2_)
-    push!(gate_errors3, gate_errors3_)
-    push!(gate_errors4, gate_errors4_)
-
-    return (maximum(gate_errors) + maximum(gate_errors2) + maximum(gate_errors3) + maximum(gate_errors4))/4
+    ret = (maximum(gate_errors_) + maximum(gate_errors2_) + maximum(gate_errors3_) + maximum(gate_errors4_))/4
+    print(maximum(gate_errors_))
+    print(typeof(ret))
+    return ret
 
 end
 
