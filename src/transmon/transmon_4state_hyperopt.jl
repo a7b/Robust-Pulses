@@ -737,5 +737,5 @@ function objective(params::Tuple{Float64, Float64})
 end
 
 best = ho.fmin(fn = objective, space = space, algo = tpe_alg, trials = tpe_trials, max_evals = 22)
-print("best" = best)
+print("best = ", best)
 println(tpe_trials.results)

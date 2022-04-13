@@ -14,7 +14,7 @@ using LaTeXStrings
 
 # paths
 const EXPERIMENT_META = "transmon"
-const EXPERIMENT_NAME = "transmon_operator_pi"
+const EXPERIMENT_NAME = "transmon_2state_operator"
 const SAVE_PATH = abspath(joinpath(WDIR, "out", EXPERIMENT_META, EXPERIMENT_NAME))
 
 # problem
