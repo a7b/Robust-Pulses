@@ -18,7 +18,7 @@ const EXPERIMENT_NAME = "transmon_operator_pi"
 const SAVE_PATH = abspath(joinpath(WDIR, "out", EXPERIMENT_META, EXPERIMENT_NAME))
 
 # problem
-const A_MAX = 2π * 6e-3
+const A_MAX = 2π * 35e-3
 const CONTROL_COUNT = 2
 const STATE_COUNT = 4
 const ASTATE_SIZE_BASE = STATE_COUNT * HDIM_ISO + 2 * CONTROL_COUNT
