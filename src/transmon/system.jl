@@ -14,7 +14,7 @@ const TRANSMON_OUT_PATH = abspath(joinpath(WDIR, "out", "transmon"))
 
 # experimental constants
 const ω_q = 0 #2π * 4.96 #GHz
-const α = -2π * 0.143 #GHz
+const α = -2π * 0.14328 #GHz
 const TRANSMON_STATE_COUNT = 3
 
 # simulation constants

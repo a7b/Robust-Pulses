@@ -11,6 +11,7 @@ using TrajectoryOptimization
 const RD = RobotDynamics
 const TO = TrajectoryOptimization
 using LaTeXStrings
+using FFTW
 
 # paths
 const EXPERIMENT_META = "transmon"
@@ -342,8 +343,12 @@ function run_traj(;evolution_time=40., solver_type=altro,
         nf_sense = nf_tol == 0. ? TO.Equality() : TO.Inequality()
         nf_nopop = NormConstraint(n, m, nf_tol, nf_sense, [STATE1_IDX[3], STATE1_IDX[6]])
         nf_nopop2 = NormConstraint(n, m, nf_tol, nf_sense, [STATE2_IDX[3], STATE2_IDX[6]])
+        nf_nopop3 = NormConstraint(n, m, nf_tol, nf_sense, [STATE3_IDX[3], STATE3_IDX[6]])
+        nf_nopop4 = NormConstraint(n, m, nf_tol, nf_sense, [STATE4_IDX[3], STATE4_IDX[6]])
         add_constraint!(constraints, nf_nopop, 2:N-1)
         add_constraint!(constraints, nf_nopop2, 2:N-1)
+        add_constraint!(constraints, nf_nopop3, 2:N-1)
+        add_constraint!(constraints, nf_nopop4, 2:N-1)
     end
 
 
