@@ -147,7 +147,7 @@ end
 
 function plot_controls(save_file_paths, plot_file_path;
                        labels=[["ℜ(ϵ)", "ℑ(ϵ)"]], title="", colors=nothing,
-                       legend=:bottomright, d2pi=false, xlims=nothing, ylims=nothing)
+                       legend=:bottomright, d2pi=true, xlims=nothing, ylims=nothing)
     fig = Plots.plot(dpi=DPI, title=title, legend=legend, xlims=xlims, ylims=ylims)
     for (i, save_file_path) in enumerate(save_file_paths)
         # Grab and prep data.
