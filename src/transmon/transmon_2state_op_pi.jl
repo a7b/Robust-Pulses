@@ -15,7 +15,7 @@ using FFTW
 
 # paths
 const EXPERIMENT_META = "transmon"
-const EXPERIMENT_NAME = "transmon_15MHz_op"
+const EXPERIMENT_NAME = "transmon_19MHz"
 const SAVE_PATH = abspath(joinpath(WDIR, "out", EXPERIMENT_META, EXPERIMENT_NAME))
 
 # problem
@@ -310,7 +310,7 @@ function run_traj(;evolution_time=40., solver_type=altro,
     R = Diagonal(SVector{m}([
         fill(qs[6], CONTROL_COUNT); # ∂2a
     ]))
-    objective = LQRObjective(Q, R, Qf, xf, N)
+    objective = (Q, R, Qf, xf, N)
 
     # must satisfy control amplitude bound
     control_bnd = BoundConstraint(n, m, x_max=x_max, x_min=x_min)
