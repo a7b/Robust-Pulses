@@ -310,7 +310,7 @@ function run_traj(;evolution_time=40., solver_type=altro,
     R = Diagonal(SVector{m}([
         fill(qs[6], CONTROL_COUNT); # ∂2a
     ]))
-    objective = (Q, R, Qf, xf, N)
+    objective = LQRObjective(Q, R, Qf, xf, N)
 
     # must satisfy control amplitude bound
     control_bnd = BoundConstraint(n, m, x_max=x_max, x_min=x_min)
