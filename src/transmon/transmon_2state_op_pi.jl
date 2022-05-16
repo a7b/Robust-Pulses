@@ -15,11 +15,12 @@ using FFTW
 
 # paths
 const EXPERIMENT_META = "transmon"
-const EXPERIMENT_NAME = "transmon_19MHz"
+const EXPERIMENT_NAME = "transmon_19MHz_optarget"
 const SAVE_PATH = abspath(joinpath(WDIR, "out", EXPERIMENT_META, EXPERIMENT_NAME))
 
 # problem
 const A_MAX = 2π * 19e-3
+const A_MAX_LIN = 19
 const CONTROL_COUNT = 2
 const STATE_COUNT = 4
 const ASTATE_SIZE_BASE = STATE_COUNT * HDIM_ISO + 2 * CONTROL_COUNT
@@ -317,8 +318,8 @@ function run_traj(;evolution_time=40., solver_type=altro,
     # must statisfy conrols start and end at 0
     control_bnd_boundary = BoundConstraint(n, m, x_max=x_max_boundary, x_min=x_min_boundary)
 
-    # must reach target state, must have zero net flux
-    target_astate_constraint = GoalConstraint(xf, [STATE1_IDX; STATE2_IDX])
+    # must reach target state,
+    target_astate_constraint = GoalConstraint(xf, [STATE1_IDX; STATE2_IDX; STATE3_IDX; STATE4_IDX])
     # must obey unit norm
     nidxs = [STATE1_IDX, STATE2_IDX, STATE3_IDX, STATE4_IDX]
     # if derivative_order >= 1
@@ -487,6 +488,28 @@ function forward_pass(save_file_path; derivative_order=0, integrator_type=rk3)
     )
 
     return res
+end
+function read_population(save_file_path; title="", xlabel="Time (ns)", ylabel="Population",
+                         legend=:bottomright)
+    # grab
+    save_file = read_save(save_file_path)
+    transmon_state_count = save_file["transmon_state_count"]
+    hdim_iso = save_file["hdim_iso"]
+    ts = save_file["ts"]
+    astates = save_file["astates"]
+    N = size(astates, 1)
+    d = Int(hdim_iso/2)
+    state1_idx = Array(1:hdim_iso)
+    state2_idx = Array(1 + hdim_iso: hdim_iso + hdim_iso)
+    state3_idx = Array(1 + hdim_iso + hdim_iso: hdim_iso + hdim_iso + hdim_iso)
+    state4_idx = Array(1 + hdim_iso + hdim_iso + hdim_iso: hdim_iso + hdim_iso + hdim_iso + hdim_iso)
+
+    ψ = get_vec_uniso(astates[N, state1_idx])
+    ψ2 = get_vec_uniso(astates[N, state2_idx])
+    ψ3 = get_vec_uniso(astates[N, state3_idx])
+    ψ4 = get_vec_uniso(astates[N, state4_idx])
+
+    return [ψ, ψ2, ψ3, ψ4]
 end
 function plot_population(save_file_path; title="", xlabel="Time (ns)", ylabel="Population",
                          legend=:bottomright)
@@ -702,4 +725,9 @@ function plot_dparam(data_file_paths; labels=["|g⟩", "|e⟩", "|g⟩ + i|e⟩"
     plot_file_path = generate_file_path("png", "gate_error_plot", SAVE_PATH)
     Plots.savefig(fig, plot_file_path)
     return plot_file_path
+end
+
+function create_square_pulse()
+    time = 1e3/(2 * A_MAX_LIN)
+
 end
