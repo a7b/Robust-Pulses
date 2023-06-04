@@ -253,7 +253,7 @@ function gen_dparam(derivative_order=0, trial_count=500, sigma_max=1e-4, save=tr
     for (i, negi_h0) in enumerate(negi_h0s)
         mh1 .= negi_h0
         # rollout
-        for k = 1:N-1
+        for k = 1:(N-2)
             discrete_dynamics!(X[k + 1], IT_RDI[integrator_type], model, X[k], U[k], ts[k], dt, mh1 )
         end
         ψN = get_vec_uniso(X[N][STATE1_IDX])

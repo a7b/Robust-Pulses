@@ -180,7 +180,7 @@ function RD.discrete_dynamics(::Type{RK3}, model::Model{DO}, astate::AbstractVec
 
     return astate_
 end
-@inline discrete_dynamics!(x_::AbstractVector, ::Type{Q}, model::AbstractModel, x::AbstractVector,
+discrete_dynamics!(x_::AbstractVector, ::Type{Q}, model::AbstractModel, x::AbstractVector,
                            u::AbstractVector, t::Real, dt::Real, H::Matrix) where {Q} = (
                                x_ .= RD.discrete_dynamics(Q, model, x, u, t, dt, H)
 )

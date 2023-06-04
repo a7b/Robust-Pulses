@@ -291,7 +291,7 @@ function run_traj(;evolution_time=40., solver_type=altro,
         ts[k + 1] = ts[k] + dt
     end
     U0 = [SVector{m}(
-        rand(-A_MAX:A_MAX, CONTROL_COUNT)
+        rand(-A_MAX:1e-4:A_MAX, CONTROL_COUNT)
     ) for k = 1:N-1]
     X0 = [SVector{n}([
         fill(NaN, n);
@@ -726,6 +726,38 @@ function plot_dparam(data_file_paths; labels=["|g⟩", "|e⟩", "|g⟩ + i|e⟩"
     Plots.savefig(fig, plot_file_path)
     return plot_file_path
 end
+
+
+function read_dparam(data_file_paths; labels=["|g⟩", "|e⟩", "|g⟩ + i|e⟩", "|g⟩ - |e⟩"], legend=:bottomright)
+    # grab
+    gate_errors = []
+    gate_errors2 = []
+    gate_errors3 = []
+    gate_errors4 = []
+
+    fracs = []
+    for data_file_path in data_file_paths
+        (gate_errors_, gate_errors2_, gate_errors3_, gate_errors4_, fracs_) = h5open(data_file_path, "r") do data_file
+            gate_errors_ = read(data_file, "gate_errors")
+            gate_errors2_ = read(data_file, "gate_errors2")
+            gate_errors3_ = read(data_file, "gate_errors3")
+            gate_errors4_ = read(data_file, "gate_errors4")
+
+            fracs_ = read(data_file, "fracs")
+            return (gate_errors_, gate_errors2_, gate_errors3_, gate_errors4_,  fracs_)
+        end
+        push!(gate_errors, gate_errors_)
+        push!(gate_errors2, gate_errors2_)
+        push!(gate_errors3, gate_errors3_)
+        push!(gate_errors4, gate_errors4_)
+        push!(fracs, fracs_)
+    end
+    println(gate_errors[1])
+    println(gate_errors2[1])
+    println(gate_errors3[1])
+    println(gate_errors4[1])
+end
+
 
 function create_square_pulse()
     time = 1e3/(2 * A_MAX_LIN)

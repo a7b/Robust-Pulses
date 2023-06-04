@@ -55,7 +55,7 @@ end
 )
 # @inline RD.state_dim(::Model{DO}) where {DO} = (
 #     ASTATE_SIZE_BASE + (SAMPLE_COUNT - STATE_COUNT) * HDIM_ISO + DO * SAMPLE_COUNT * HDIM_ISO
-# )
+# )   
 @inline RD.control_dim(::Model) = ACONTROL_SIZE
 
 # dynamics
