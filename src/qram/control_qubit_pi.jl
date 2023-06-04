@@ -17,11 +17,13 @@ const EXPERIMENT_NAME = "control_transmon_pi"
 const SAVE_PATH = abspath(joinpath(WDIR, "out", EXPERIMENT_META, EXPERIMENT_NAME))
 
 # problem
+#control bounds
 const A_MAX = 2π * 20e-3
 const CONTROL_COUNT = 2
+# number of initial states -> |g⟩, |e⟩, |g⟩ - |e⟩, |g⟩ + i|e⟩ 
 const STATE_COUNT = 4
 const ASTATE_SIZE_BASE = STATE_COUNT * HDIM_ISO + 2 * CONTROL_COUNT
-#number of states whose derivative we penalize. here it is 2 for |g⟩ and |e⟩
+# number of states whose derivative we penalize. here it is 2 for |g⟩ and |e⟩
 const SAMPLE_COUNT = 2
 const ASTATE_SIZE = ASTATE_SIZE_BASE
 const ACONTROL_SIZE = CONTROL_COUNT
@@ -224,7 +226,7 @@ end
 
 # main
 function run_traj(;evolution_time=40., solver_type=altro,
-                  sqrtbp=false, derivative_order=0, integrator_type=rk3,
+                  sqrtbp=false, derivative_order=1, integrator_type=rk3,
                   qs=[1e0, 1e0, 1e0, 1e-1, 5e-2, 1e-1],
                   smoke_test=false, dt_inv=Int64(5e0), constraint_tol=1e-9, al_tol=1e-5,
                   pn_steps=2, max_penalty=1e12, verbose=true, save=true, max_iterations=Int64(2e5),
@@ -473,6 +475,7 @@ function forward_pass(save_file_path; derivative_order=0, integrator_type=rk3)
 
     return res
 end
+
 function plot_population(save_file_path; title="", xlabel="Time (ns)", ylabel="Population",
                          legend=:bottomright)
     # grab
