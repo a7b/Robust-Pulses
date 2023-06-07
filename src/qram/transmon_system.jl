@@ -93,7 +93,8 @@ const XPI_E_ISO = get_vec_iso([-1im, 0, 0])
 const XPI_3_ISO = get_vec_iso(push!(Rx(π)*[1/sqrt(2), 1im/sqrt(2)], 0))
 const XPI_4_ISO = get_vec_iso(push!(Rx(π)*[1/sqrt(2), -1/sqrt(2)], 0))
 
-
+const NEGI_TRANSMON_NUMBER_ISO = get_mat_iso(-1im * TRANSMON_NUMBER)
+const NEGI2_H0_ISO = 2 * NEGI_TRANSMON_NUMBER_ISO
 # # paths
 const SPIN_OUT_PATH = abspath(joinpath(WDIR, "out", "spin"))
 const FBFQ_DFQ_DATA_FILE_PATH = joinpath(SPIN_OUT_PATH, "figures", "misc", "dfq.h5")
